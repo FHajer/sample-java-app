@@ -3,17 +3,9 @@ pipeline {
 
     environment {
 
-        AWS_ACCESS_KEY_ID     = credentials('jenkins-aws-secret-key-id')
-        AWS_SECRET_ACCESS_KEY = credentials('jenkins-aws-secret-access-key')
-
-        AWS_S3_BUCKET = "artefact-bucket-repo"
-        ARTIFACT_NAME = "hello-world.war"
-        AWS_EB_APP_NAME = "java-webapp"
-        AWS_EB_APP_VERSION = "${BUILD_ID}"
-        AWS_EB_ENVIRONMENT = "Javawebapp-env"
 
         SONAR_IP = "54.226.50.200"
-        SONAR_TOKEN = "sqp_aa3cba40e3342d9cff9044e498766a66cf8cc0cc"
+        SONAR_TOKEN = " sqp_d5d7fd4852745a07f24a8c832d21b380b8a8cc79"
 
     }
 
@@ -54,10 +46,11 @@ pipeline {
             steps {
                 sh '''
 
-                mvn clean verify sonar:sonar \
-                    -Dsonar.projectKey=Online-cohort-project \
-                    -Dsonar.host.url=http://$SONAR_IP \
-                    -Dsonar.login=$SONAR_TOKEN
+             mvn clean verify sonar:sonar \
+                -Dsonar.projectKey=sample-maven-app \
+                -Dsonar.host.url=http://54.226.50.200 \
+                -Dsonar.login=sqp_d5d7fd4852745a07f24a8c832d21b380b8a8cc79
+               
 
                 '''
             }
@@ -79,26 +72,6 @@ pipeline {
             }
         }
 
-        stage('Publish artefacts to S3 Bucket') {
-            steps {
-
-                sh "aws configure set region us-east-1"
-
-                sh "aws s3 cp ./target/**.war s3://$AWS_S3_BUCKET/$ARTIFACT_NAME"
-                
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-
-                sh 'aws elasticbeanstalk create-application-version --application-name $AWS_EB_APP_NAME --version-label $AWS_EB_APP_VERSION --source-bundle S3Bucket=$AWS_S3_BUCKET,S3Key=$ARTIFACT_NAME'
-
-                sh 'aws elasticbeanstalk update-environment --application-name $AWS_EB_APP_NAME --environment-name $AWS_EB_ENVIRONMENT --version-label $AWS_EB_APP_VERSION'
-            
-                
-            }
-        }
         
     }
 }
